@@ -1,6 +1,6 @@
 # gen-badge
 
-![Badge](https://github.com/kakwa/gen-badge/raw/master/example.png)
+![Badge](https://github.com/kakwa/gen-badge/raw/master/example.svg)
 
 A pure Shell badge/shield generator with no dependency required.
 
