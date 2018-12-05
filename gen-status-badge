@@ -67,6 +67,62 @@ cdata_escape(){
 	printf "%s" "$1" | sed 's/]]>/]]]]><![CDATA[>/g'
 }
 
+hex2dec(){
+	printf "%d" "$((0x$1))"
+}
+
+is_3DIGIT_RGB(){
+	[ `printf "$1" | wc -c` -eq 4 ]
+}
+
+getR(){
+	if is_3DIGIT_RGB "$1"
+	then
+		echo "$1" | sed 's/^.\(.\)../\10/'
+	else
+		echo "$1" | sed 's/^.\(..\)..../\1/'
+	fi
+}
+
+getG(){
+	if is_3DIGIT_RGB "$1"
+	then
+		echo "$1" | sed 's/^..\(.\)./\10/'
+	else
+		echo "$1" | sed 's/^...\(..\)../\1/'
+	fi
+}
+
+getB(){
+	if is_3DIGIT_RGB "$1"
+	then
+		echo "$1" | sed 's/^...\(.\)/\10/'
+	else
+		echo "$1" | sed 's/^.....\(..\)/\1/'
+	fi
+}
+
+# Compute brightness of an RGB color according to the LUMA formula (* 1000 as sh is integer only)
+brightness(){
+	R=$(hex2dec "$(getR "$1")")
+	G=$(hex2dec "$(getG "$1")")
+	B=$(hex2dec "$(getB "$1")")
+	echo $(( 2126 * $R + 7152 * $G + 722 * $B ))
+}
+
+# Compute the "brightness" to determine if we should use black or white for the label
+BRIGHT=`brightness "$COLOR"`
+
+# 1280000 is the brightness of "#808080" aka gray, seems like a good threshold to switch color
+if [ $BRIGHT -lt 1280000 ]
+then
+	TEXT_COLOR="#fff"
+	SHADOW_COLOR="#010101"
+else
+	TEXT_COLOR="#000"
+	SHADOW_COLOR="#fefefe"
+fi
+
 # Compute the width of the badge according from label and status string lenght
 WIDTH=$(( (`len "$STATUS"` + `len "$LABEL"`) * 7 + 20 ))
 LABEL_WIDTH=$(( (`len "$LABEL"`) * 7 + 10 ))
@@ -94,11 +150,12 @@ cat >${OUT_PATH} <<EOF
     <path fill="${COLOR}" d="M${LABEL_WIDTH} 0h${STATUS_WIDTH}v20H${LABEL_WIDTH}z"/>
     <path fill="url(#b)" d="M0 0h${WIDTH}v20H0z"/>
 </g>
-<g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110">
+<g text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110">
     <text x="${LABEL_X}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
-    <text x="${LABEL_X}" y="140" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
-    <text x="${STATUS_X}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
-    <text x="${STATUS_X}" y="140" transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
+    <text x="${LABEL_X}" y="140" fill="#fff" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
+    <text x="${STATUS_X}" y="150" fill="${SHADOW_COLOR}" fill-opacity=".3" transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
+    <text x="${STATUS_X}" y="140" fill="${TEXT_COLOR}"  transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
+
 </g>
 </svg>
 EOF
