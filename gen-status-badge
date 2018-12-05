@@ -1,0 +1,104 @@
+#!/bin/sh
+
+help(){
+  cat <<EOF
+usage: `basename $0` -o <PATH of generated badge> [-s <STATUS>] [-l <LABEL>] [-c <COLOR>]
+
+Generate a status badge.
+
+arguments:
+  -o <PATH>: path where to put the generated badge
+  -s <STATUS>: Status part of the badge 
+  -l <LABEL>: Label of the badge
+  -c <COLOR>: RGB color code
+	if -s 'ok' is passed, default color is green (#33cc33)
+	if -s 'ko' is passed, default color is red (#cc3300)
+	otherwise the default color is black (#000000)
+EOF
+  exit 1
+}
+
+exit_error(){
+	printf "%s\n" "$1"
+	exit 1
+}
+
+while getopts ":ho:s:l:c:" opt; do
+  case $opt in
+    h)  help;;
+    o)  OUT_PATH="$OPTARG";;
+    l)  LABEL="$OPTARG";;
+    s)  STATUS="$OPTARG";;
+    c)  COLOR="$OPTARG";;
+    \?) echo "Invalid option: -$OPTARG" >&2 ;help; exit 1 ;;
+    :)  echo "Option -$OPTARG requires an argument." >&2; help; exit 1;;
+  esac
+done
+
+
+if [ "$STATUS" = 'ok' ] && [ "$COLOR" = "" ]
+then
+	COLOR="#33cc33"
+elif [ "$STATUS" = 'ko' ] && [ "$COLOR" = "" ]
+then
+	COLOR='#cc3300'
+elif [ "$COLOR" = "" ]
+then
+	COLOR='#000000'
+fi
+
+# Check if the color is actually a proper RGB definition
+if ! printf '%s' "$COLOR" | grep -qe  '^#[0-9A-Fa-f]\{6\}$' &&
+   ! printf '%s' "$COLOR" | grep -qe  '^#[0-9A-Fa-f]\{3\}$'
+then
+    exit_error "COLOR doesn't match an RGB definition\
+ (either #XXX or #XXXXXX with X an hexa value)"
+fi
+
+# Check that the 
+[ "$OUT_PATH" = "" ] && exit_error "Missing mandatory argument -o <PATH/TO/BADGE.svg>"
+[ -d "`dirname $OUT_PATH`" ] || exit_error "output directory doesn't exist"
+
+len(){
+    printf "%s" "$1" | wc -c
+}
+
+cdata_escape(){
+	printf "%s" "$1" | sed 's/]]>/]]]]><![CDATA[>/g'
+}
+
+# Compute the width of the badge according from label and status string lenght
+WIDTH=$(( (`len "$STATUS"` + `len "$LABEL"`) * 7 + 20 ))
+LABEL_WIDTH=$(( (`len "$LABEL"`) * 7 + 10 ))
+STATUS_WIDTH=$(( $WIDTH - $LABEL_WIDTH  ))
+LABEL_LEN=$(( `len "$LABEL"` * 10  * 7))
+LABEL_X=$(( $LABEL_WIDTH / 2 * 10 ))
+STATUS_X=$(( ( $LABEL_WIDTH + $STATUS_WIDTH / 2 ) * 10 ))
+STATUS_LEN=$(( `len "$STATUS"` * 10  * 7 ))
+
+# escape end tag of CDATA
+STATUS="`cdata_escape "$STATUS"`"
+LABEL="`cdata_escape "$LABEL"`"
+
+cat >${OUT_PATH} <<EOF
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${WIDTH}" height="20">
+<linearGradient id="b" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
+</linearGradient>
+<clipPath id="a">
+    <rect width="${WIDTH}" height="20" rx="3" fill="#fff"/>
+</clipPath>
+<g clip-path="url(#a)">
+    <path fill="#555" d="M0 0h${LABEL_WIDTH}v20H0z"/>
+    <path fill="${COLOR}" d="M${LABEL_WIDTH} 0h${STATUS_WIDTH}v20H${LABEL_WIDTH}z"/>
+    <path fill="url(#b)" d="M0 0h${WIDTH}v20H0z"/>
+</g>
+<g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110">
+    <text x="${LABEL_X}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
+    <text x="${LABEL_X}" y="140" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
+    <text x="${STATUS_X}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
+    <text x="${STATUS_X}" y="140" transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
+</g>
+</svg>
+EOF
