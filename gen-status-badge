@@ -15,7 +15,7 @@ arguments:
 	if -s 'ko' is passed, default color is red (#cc3300)
 	otherwise the default color is black (#000000)
 EOF
-  exit 1
+  exit 0
 }
 
 exit_error(){
