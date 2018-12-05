@@ -14,7 +14,9 @@ doc build status or code coverage percentage badges which are then published usi
 This small script permits to customize the color, label (text in the right part of the badge)
 and status (text in the left part).
 
-It also automatically handles the resizing of the badge depending on status and label text length.
+It automatically handles the resizing of the badge depending on status and label text length.
+
+It also automatically chooses black or white text depending on the brightness of the status color.
 
 ## Usage
 
