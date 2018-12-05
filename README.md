@@ -2,11 +2,11 @@
 
 ![Badge](https://github.com/kakwa/gen-badge/raw/master/example.png)
 
-A pure Shell badge/shield generator with no dependency required.
+A pure shell badge/shield generator with no dependency required.
 
 ## Description
 
-This is a simple "Travis-ci" like badge generator that can easily be included in your project.
+This is a simple "Travis-ci" like badge/shield generator that can easily be included in your project.
 
 Typically I use it in my Jenkins projects to create some additionnal badges like
 doc build status or code coverage percentage badges which are then published using `publishHTML`.
