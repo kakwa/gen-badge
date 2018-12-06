@@ -121,7 +121,7 @@ then
     SHADOW_COLOR="#010101"
 else
     TEXT_COLOR="#000"
-    SHADOW_COLOR="#fefefe"
+    SHADOW_COLOR="#010101"
 fi
 
 # Compute the width of the badge according from label and status string lenght
@@ -130,8 +130,10 @@ LABEL_WIDTH=$(( (`len "$LABEL"`) * 7 + 10 ))
 STATUS_WIDTH=$(( $WIDTH - $LABEL_WIDTH  ))
 LABEL_LEN=$(( `len "$LABEL"` * 10  * 7))
 LABEL_X=$(( $LABEL_WIDTH / 2 * 10 ))
+LABEL_SHADOW_X=$(( $LABEL_X + 5  ))
 STATUS_X=$(( ( $LABEL_WIDTH + $STATUS_WIDTH / 2 ) * 10 ))
 STATUS_LEN=$(( `len "$STATUS"` * 10  * 7 ))
+STATUS_SHADOW_X=$(( $STATUS_X + 5  ))
 
 # escape end tag of CDATA
 STATUS="`cdata_escape "$STATUS"`"
@@ -152,9 +154,9 @@ cat >${OUT_PATH} <<EOF
     <path fill="url(#b)" d="M0 0h${WIDTH}v20H0z"/>
 </g>
 <g text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110">
-    <text x="${LABEL_X}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
+    <text x="${LABEL_SHADOW_X}" y="145" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
     <text x="${LABEL_X}" y="140" fill="#fff" transform="scale(.1)" textLength="${LABEL_LEN}"><![CDATA[${LABEL}]]></text>
-    <text x="${STATUS_X}" y="150" fill="${SHADOW_COLOR}" fill-opacity=".3" transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
+    <text x="${STATUS_SHADOW_X}" y="145" fill="${SHADOW_COLOR}" fill-opacity=".3" transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
     <text x="${STATUS_X}" y="140" fill="${TEXT_COLOR}"  transform="scale(.1)" textLength="${STATUS_LEN}"><![CDATA[${STATUS}]]></text>
 
 </g>
